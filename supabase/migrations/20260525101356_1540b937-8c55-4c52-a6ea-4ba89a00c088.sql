@@ -1,0 +1,2 @@
+REVOKE EXECUTE ON FUNCTION public.short_video_comment_after_insert() FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.short_video_comment_after_delete() FROM anon, authenticated, public;

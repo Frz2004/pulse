@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.bump_conversation_on_message() FROM PUBLIC, anon, authenticated;
