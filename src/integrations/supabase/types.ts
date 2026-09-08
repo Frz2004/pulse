@@ -970,16 +970,19 @@ export type Database = {
         Row: {
           id: string
           phone: string | null
+          phone_verified: boolean
           updated_at: string
         }
         Insert: {
           id: string
           phone?: string | null
+          phone_verified?: boolean
           updated_at?: string
         }
         Update: {
           id?: string
           phone?: string | null
+          phone_verified?: boolean
           updated_at?: string
         }
         Relationships: []
@@ -1177,104 +1180,306 @@ export type Database = {
       }
       treehole_posts: {
         Row: {
-          anon_name: string
+          allow_comments: boolean
+          anonymous_avatar: string | null
+          anonymous_display: boolean
+          anonymous_name: string
           author_id: string
+          category: string
+          comments_count: number
           content: string
+          content_tags: string[]
+          content_type: string
           created_at: string
-          hug_count: number
           id: string
-          media_url: string | null
-          mood: string | null
-          resonance_count: number
+          image_url: string | null
+          likes_count: number
+          status: string
+          views_count: number
         }
         Insert: {
-          anon_name: string
+          allow_comments?: boolean
+          anonymous_avatar?: string | null
+          anonymous_display?: boolean
+          anonymous_name?: string
           author_id: string
+          category?: string
+          comments_count?: number
           content: string
+          content_tags?: string[]
+          content_type?: string
           created_at?: string
-          hug_count?: number
           id?: string
-          media_url?: string | null
-          mood?: string | null
-          resonance_count?: number
+          image_url?: string | null
+          likes_count?: number
+          status?: string
+          views_count?: number
         }
         Update: {
-          anon_name?: string
+          allow_comments?: boolean
+          anonymous_avatar?: string | null
+          anonymous_display?: boolean
+          anonymous_name?: string
           author_id?: string
+          category?: string
+          comments_count?: number
           content?: string
+          content_tags?: string[]
+          content_type?: string
           created_at?: string
-          hug_count?: number
           id?: string
-          media_url?: string | null
-          mood?: string | null
-          resonance_count?: number
+          image_url?: string | null
+          likes_count?: number
+          status?: string
+          views_count?: number
         }
         Relationships: []
       }
-      treehole_reactions: {
+      treehole_post_attachments: {
         Row: {
           created_at: string
-          kind: string
+          file_type: string
+          file_url: string
+          id: string
+          post_id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          file_type?: string
+          file_url: string
+          id?: string
+          post_id: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          file_type?: string
+          file_url?: string
+          id?: string
+          post_id?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      treehole_views: {
+        Row: {
+          created_at: string
           post_id: string
           user_id: string
         }
         Insert: {
           created_at?: string
-          kind: string
           post_id: string
           user_id: string
         }
         Update: {
           created_at?: string
-          kind?: string
           post_id?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "treehole_reactions_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "treehole_posts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "treehole_reactions_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "treehole_posts_public"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
-      treehole_reveals: {
+      treehole_comments: {
         Row: {
-          conversation_id: string
-          revealed_at: string | null
-          user_a_consent: boolean
-          user_b_consent: boolean
+          anonymous_name: string
+          author_id: string
+          content: string
+          created_at: string
+          id: string
+          likes_count: number
+          parent_comment_id: string | null
+          post_id: string
+          visible_to_author_only: boolean
         }
         Insert: {
-          conversation_id: string
-          revealed_at?: string | null
-          user_a_consent?: boolean
-          user_b_consent?: boolean
+          anonymous_name?: string
+          author_id: string
+          content: string
+          created_at?: string
+          id?: string
+          likes_count?: number
+          parent_comment_id?: string | null
+          post_id: string
+          visible_to_author_only?: boolean
         }
         Update: {
-          conversation_id?: string
-          revealed_at?: string | null
-          user_a_consent?: boolean
-          user_b_consent?: boolean
+          anonymous_name?: string
+          author_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          likes_count?: number
+          parent_comment_id?: string | null
+          post_id?: string
+          visible_to_author_only?: boolean
         }
-        Relationships: [
-          {
-            foreignKeyName: "treehole_reveals_conversation_id_fkey"
-            columns: ["conversation_id"]
-            isOneToOne: true
-            referencedRelation: "conversations"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
+      }
+      treehole_likes: {
+        Row: {
+          comment_id: string | null
+          created_at: string
+          id: string
+          post_id: string | null
+          user_id: string
+        }
+        Insert: {
+          comment_id?: string | null
+          created_at?: string
+          id?: string
+          post_id?: string | null
+          user_id: string
+        }
+        Update: {
+          comment_id?: string | null
+          created_at?: string
+          id?: string
+          post_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      treehole_reports: {
+        Row: {
+          created_at: string
+          id: string
+          reason: string
+          reporter_id: string
+          status: string
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reason: string
+          reporter_id: string
+          status?: string
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reason?: string
+          reporter_id?: string
+          status?: string
+          target_id?: string
+          target_type?: string
+        }
+        Relationships: []
+      }
+      treehole_chats: {
+        Row: {
+          author_anonymous_name: string
+          author_accept_reveal: boolean
+          author_id: string
+          created_at: string
+          ended_at: string | null
+          id: string
+          post_id: string
+          requester_accept_reveal: boolean
+          requester_anonymous_name: string
+          requester_id: string
+          reveal_status: string
+          status: string
+          total_message_count: number
+        }
+        Insert: {
+          author_anonymous_name: string
+          author_accept_reveal?: boolean
+          author_id: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          post_id: string
+          requester_accept_reveal?: boolean
+          requester_anonymous_name: string
+          requester_id: string
+          reveal_status?: string
+          status?: string
+          total_message_count?: number
+        }
+        Update: {
+          author_anonymous_name?: string
+          author_accept_reveal?: boolean
+          author_id?: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          post_id?: string
+          requester_accept_reveal?: boolean
+          requester_anonymous_name?: string
+          requester_id?: string
+          reveal_status?: string
+          status?: string
+          total_message_count?: number
+        }
+        Relationships: []
+      }
+      treehole_chat_messages: {
+        Row: {
+          chat_id: string
+          content: string
+          content_type: string
+          created_at: string
+          id: string
+          read_at: string | null
+          sender_anonymous_name: string
+          sender_id: string
+        }
+        Insert: {
+          chat_id: string
+          content: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          sender_anonymous_name: string
+          sender_id: string
+        }
+        Update: {
+          chat_id?: string
+          content?: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          sender_anonymous_name?: string
+          sender_id?: string
+        }
+        Relationships: []
+      }
+      treehole_reveal_requests: {
+        Row: {
+          chat_id: string
+          created_at: string
+          id: string
+          requester_accept: boolean
+          requester_id: string
+          status: string
+          target_id: string
+        }
+        Insert: {
+          chat_id: string
+          created_at?: string
+          id?: string
+          requester_accept?: boolean
+          requester_id: string
+          status?: string
+          target_id: string
+        }
+        Update: {
+          chat_id?: string
+          created_at?: string
+          id?: string
+          requester_accept?: boolean
+          requester_id?: string
+          status?: string
+          target_id?: string
+        }
+        Relationships: []
       }
       user_locations: {
         Row: {
@@ -1522,34 +1727,55 @@ export type Database = {
     Views: {
       treehole_posts_public: {
         Row: {
-          anon_name: string | null
+          allow_comments: boolean | null
+          anonymous_avatar: string | null
+          anonymous_display: boolean | null
+          anonymous_name: string | null
+          category: string | null
+          comments_count: number | null
           content: string | null
+          content_tags: string[] | null
+          content_type: string | null
           created_at: string | null
-          hug_count: number | null
           id: string | null
-          media_url: string | null
-          mood: string | null
-          resonance_count: number | null
+          image_url: string | null
+          likes_count: number | null
+          status: string | null
+          views_count: number | null
         }
         Insert: {
-          anon_name?: string | null
-          content?: string | null
-          created_at?: string | null
-          hug_count?: number | null
-          id?: string | null
-          media_url?: string | null
-          mood?: string | null
-          resonance_count?: number | null
+          allow_comments?: never
+          anonymous_avatar?: never
+          anonymous_display?: never
+          anonymous_name?: never
+          category?: never
+          comments_count?: never
+          content?: never
+          content_tags?: never
+          content_type?: never
+          created_at?: never
+          id?: never
+          image_url?: never
+          likes_count?: never
+          status?: never
+          views_count?: never
         }
         Update: {
-          anon_name?: string | null
-          content?: string | null
-          created_at?: string | null
-          hug_count?: number | null
-          id?: string | null
-          media_url?: string | null
-          mood?: string | null
-          resonance_count?: number | null
+          allow_comments?: never
+          anonymous_avatar?: never
+          anonymous_display?: never
+          anonymous_name?: never
+          category?: never
+          comments_count?: never
+          content?: never
+          content_tags?: never
+          content_type?: never
+          created_at?: never
+          id?: never
+          image_url?: never
+          likes_count?: never
+          status?: never
+          views_count?: never
         }
         Relationships: []
       }

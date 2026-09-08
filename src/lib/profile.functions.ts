@@ -83,7 +83,6 @@ export const saveProfile = createServerFn({ method: "POST" })
       age_range: data.ageRange ?? null,
       distance: data.distance || null,
       icebreaker: data.icebreaker || null,
-      phone_verified: data.phoneVerified,
       verify_real: data.verifyReal,
       verify_student: data.verifyStudent,
       onboarded: true,
@@ -121,7 +120,7 @@ export const getMyProfile = createServerFn({ method: "GET" })
       .maybeSingle();
     if (privateError) throw new Error(privateError.message);
 
-    return { profile: data ? { ...data, phone: privateProfile?.phone ?? "", phone_verified: privateProfile?.phone_verified ?? data.phone_verified ?? false } : data };
+    return { profile: data ? { ...data, phone: privateProfile?.phone ?? "", phone_verified: privateProfile?.phone_verified ?? false } : data };
   });
 
 export const listDiscoverCandidates = createServerFn({ method: "GET" })

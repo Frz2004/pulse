@@ -35,7 +35,7 @@ export const listTreeholePosts = createServerFn({ method: "GET" })
         type: r.category,
         content: r.content,
         imageUrl: r.image_url ?? null,
-        imageUrls: [],
+        imageUrls: [] as string[],
         tags: Array.isArray(r.content_tags) ? r.content_tags : [],
         likes: r.likes_count ?? 0,
         comments: r.comments_count ?? 0,
@@ -62,7 +62,7 @@ export const listTreeholePosts = createServerFn({ method: "GET" })
       }
     }
 
-    Promise.all(posts.map((p) => supabaseAdmin.from("treehole_views").upsert({ post_id: p.id, user_id: userId }, { onConflict: "post_id,user_id" }).then(() => null).catch(() => null))).catch(() => null);
+    void Promise.all(posts.map((p) => supabaseAdmin.from("treehole_views").upsert({ post_id: p.id, user_id: userId }, { onConflict: "post_id,user_id" }).then(() => null, () => null)));
     return { posts };
   });
 

@@ -65,8 +65,6 @@ function TreeholePage() {
   const revealFn = useServerFn(requestTreeholeReveal);
   const decideRevealFn = useServerFn(decideTreeholeReveal);
 
-  if (pathname !== "/explore/treehole") return <Outlet />;
-
   const { data, refetch } = useQueryShim(async () => fetchPosts({ data: { category: tab, q: query || undefined } }), [tab, query]);
   const posts = data?.posts ?? [];
 
@@ -96,6 +94,10 @@ function TreeholePage() {
     });
   }, [comments, selected]);
 
+  // 聊天子路由（/explore/treehole/chat）会把本组件当作布局复用；
+  // 提前返回前必须先调用完所有 Hook，否则来回跳转会触发 React 渲染顺序错误。
+  if (pathname !== "/explore/treehole") return <Outlet />;
+
   const doLike = async (postId: string) => {
     if (postLikeIds.includes(postId)) return;
     setPostLikeIds((v) => [...v, postId]);
@@ -113,8 +115,8 @@ function TreeholePage() {
     await refetch();
   };
 
-  const doPublish = async (payload: { content: string; tags: string[]; category: PostType; contentType: "text" | "image" | "emoji" | "topic"; imageUrl?: string }) => {
-    await createPostFn({ data: { content: payload.content, imageUrl: payload.imageUrl, tags: payload.tags, category: payload.category, allowComments: true, anonymousDisplay: true, contentType: payload.contentType } });
+  const doPublish = async (payload: { content: string; tags: string[]; category: PostType; contentType: "text" | "image" | "emoji" | "topic"; imageUrl?: string; imageUrls?: string[] }) => {
+    await createPostFn({ data: { content: payload.content, imageUrl: payload.imageUrl, imageUrls: payload.imageUrls ?? [], tags: payload.tags, category: payload.category, allowComments: true, anonymousDisplay: true, contentType: payload.contentType } });
     await refetch();
     setPublishOpen(false);
     toast.success("树洞已发布，等待广场展示");
@@ -171,7 +173,7 @@ function TreeholePage() {
         <div className="flex gap-2 overflow-x-auto pb-1">{["全部", "最新", "吐槽", "提问"].map((item) => <button key={item} onClick={() => setTab(item as any)} className={`shrink-0 rounded-full px-3 py-1.5 text-xs ${tab === item ? "bg-foreground text-background" : "bg-surface text-muted-foreground"}`}>{item}</button>)}</div>
         <label className="flex items-center gap-2 rounded-2xl border border-border bg-surface/70 px-3 py-2 text-sm"><Search className="size-4 text-muted-foreground" /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="搜索树洞内容或标签" className="flex-1 bg-transparent outline-none placeholder:text-muted-foreground/60" /></label>
         <div className="space-y-3">
-          {filtered.map((post) => (
+          {filtered.map((post: TreeholePost) => (
             <article key={post.id} className="rounded-3xl border border-border bg-surface/70 p-4 ios-card">
               <div className="flex items-start gap-3">
                 <button onClick={() => openPost(post)} className={`grid size-11 place-items-center rounded-2xl bg-gradient-to-br ${post.avatar} text-background`}><UserRound className="size-5" /></button>
@@ -185,7 +187,7 @@ function TreeholePage() {
                   </button>
                 ) : (
                   <div className="mt-3 grid grid-cols-3 gap-1.5">
-                    {post.imageUrls.slice(0, 9).map((url) => (
+                    {post.imageUrls.slice(0, 9).map((url: string) => (
                       <button key={url} type="button" onClick={() => setPostPreviewImage(url)} className="overflow-hidden rounded-xl">
                         <img src={url} alt="treehole" className="aspect-square w-full object-cover" />
                       </button>
@@ -197,7 +199,7 @@ function TreeholePage() {
                   <img src={post.imageUrl} alt="treehole" className="h-56 w-full object-cover" />
                 </button>
               ) : null}
-              <div className="mt-3 flex flex-wrap gap-1.5">{post.tags.map((t) => <span key={t} className="rounded-full border border-border bg-background/60 px-2 py-0.5 text-[10px] text-muted-foreground">#{t}</span>)}</div>
+              <div className="mt-3 flex flex-wrap gap-1.5">{post.tags.map((t: string) => <span key={t} className="rounded-full border border-border bg-background/60 px-2 py-0.5 text-[10px] text-muted-foreground">#{t}</span>)}</div>
               <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
                 <button onClick={() => doLike(post.id)} className="inline-flex items-center gap-1.5"><ThumbsUp className="size-4" /> {post.likes}</button>
                 <button onClick={() => openPost(post)} className="inline-flex items-center gap-1.5"><MessageCircle className="size-4" /> {post.comments}</button>
@@ -216,7 +218,7 @@ function TreeholePage() {
   );
 }
 
-function PublishModal({ onClose, onPublish }: { onClose: () => void; onPublish: (payload: { content: string; tags: string[]; category: PostType; contentType: "text" | "image" | "emoji" | "topic"; imageUrl?: string }) => Promise<void> }) {
+function PublishModal({ onClose, onPublish }: { onClose: () => void; onPublish: (payload: { content: string; tags: string[]; category: PostType; contentType: "text" | "image" | "emoji" | "topic"; imageUrl?: string; imageUrls?: string[] }) => Promise<void> }) {
   const [content, setContent] = useState("");
   const [tags, setTags] = useState("");
   const [category, setCategory] = useState<PostType>("最新");
@@ -285,7 +287,7 @@ function PublishModal({ onClose, onPublish }: { onClose: () => void; onPublish: 
     return onPublish({ content: content.trim(), tags: tags.split(/\s+/).map((t) => t.replace(/^#+/, "").trim()).filter(Boolean), category, contentType, imageUrl: imageUrls[0] ?? undefined, imageUrls });
   };
 
-  return (<div className="fixed inset-0 z-50 bg-background/90 backdrop-blur-xl overflow-hidden"><div className="mx-auto flex h-full w-full max-w-[430px] flex-col p-4 pt-6 overflow-hidden"><div className="mb-4 flex items-center justify-between shrink-0"><button onClick={onClose} className="rounded-full border border-border px-3 py-1.5 text-sm">取消</button><div className="font-display text-lg font-semibold">发布树洞</div><button disabled={uploading} onClick={doPublish} className="rounded-full bg-coral px-3 py-1.5 text-sm font-semibold text-background disabled:opacity-60">{uploading ? `上传中 ${uploadProgress}%` : "发布"}</button></div><div className="flex-1 overflow-y-auto overscroll-contain space-y-3 rounded-3xl border border-border bg-surface p-4"><textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="写下你的树洞内容..." className="h-28 w-full resize-none rounded-2xl border border-border bg-background px-3 py-2 text-sm outline-none placeholder:text-muted-foreground/60" />{uploading && <div className="rounded-2xl border border-border bg-background px-3 py-2 text-xs text-muted-foreground">正在上传图片 {uploadProgress}%</div>}{previewUrls.length > 0 && <div className={previewUrls.length === 1 ? "mt-1" : "grid grid-cols-3 gap-1.5"}>{previewUrls.map((url) => <button key={url} type="button" onClick={() => setPreviewImage(url)} className="relative overflow-hidden rounded-2xl"><img src={url} alt="treehole upload" className={previewUrls.length === 1 ? "h-40 w-full object-cover" : "aspect-square w-full object-cover"} /><span onClick={(e) => { e.stopPropagation(); removeImage(url); }} className="absolute right-1 top-1 rounded-full bg-black/60 px-2 py-0.5 text-[10px] text-white">删除</span></button>)}</div>}<div className="flex items-center gap-2"><label className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs"><ImageIcon className="size-3.5" /> 多图上传<input type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleFiles(e.target.files)} /></label><div className="flex gap-1 overflow-x-auto">{emojiBar.map((emoji) => <button key={emoji} onClick={() => { setContent((v) => `${v}${emoji}`); setContentType("emoji"); }} className="rounded-full border border-border px-2 py-1 text-xs">{emoji}</button>)}</div></div><input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="内容标签（如：#感情 #职场）" className="w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm outline-none" /><select value={category} onChange={(e) => setCategory(e.target.value as PostType)} className="w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm outline-none"><option>最新</option><option>吐槽</option><option>提问</option></select><div className="flex items-center gap-2 text-xs text-muted-foreground"><Smile className="size-3.5" /> 当前类型：{contentType}</div></div></div>{previewImage && <div className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4" onClick={() => setPublishPreviewImage(null)}><img src={publishPreviewImage} alt="preview" className="max-h-[85vh] max-w-full rounded-2xl object-contain shadow-2xl" /></div>}</div>);
+  return (<div className="fixed inset-0 z-50 bg-background/90 backdrop-blur-xl overflow-hidden"><div className="mx-auto flex h-full w-full max-w-[430px] flex-col p-4 pt-6 overflow-hidden"><div className="mb-4 flex items-center justify-between shrink-0"><button onClick={onClose} className="rounded-full border border-border px-3 py-1.5 text-sm">取消</button><div className="font-display text-lg font-semibold">发布树洞</div><button disabled={uploading} onClick={doPublish} className="rounded-full bg-coral px-3 py-1.5 text-sm font-semibold text-background disabled:opacity-60">{uploading ? `上传中 ${uploadProgress}%` : "发布"}</button></div><div className="flex-1 overflow-y-auto overscroll-contain space-y-3 rounded-3xl border border-border bg-surface p-4"><textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="写下你的树洞内容..." className="h-28 w-full resize-none rounded-2xl border border-border bg-background px-3 py-2 text-sm outline-none placeholder:text-muted-foreground/60" />{uploading && <div className="rounded-2xl border border-border bg-background px-3 py-2 text-xs text-muted-foreground">正在上传图片 {uploadProgress}%</div>}{previewUrls.length > 0 && <div className={previewUrls.length === 1 ? "mt-1" : "grid grid-cols-3 gap-1.5"}>{previewUrls.map((url) => <button key={url} type="button" onClick={() => setPreviewImage(url)} className="relative overflow-hidden rounded-2xl"><img src={url} alt="treehole upload" className={previewUrls.length === 1 ? "h-40 w-full object-cover" : "aspect-square w-full object-cover"} /><span onClick={(e) => { e.stopPropagation(); removeImage(url); }} className="absolute right-1 top-1 rounded-full bg-black/60 px-2 py-0.5 text-[10px] text-white">删除</span></button>)}</div>}<div className="flex items-center gap-2"><label className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs"><ImageIcon className="size-3.5" /> 多图上传<input type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleFiles(e.target.files)} /></label><div className="flex gap-1 overflow-x-auto">{emojiBar.map((emoji) => <button key={emoji} onClick={() => { setContent((v) => `${v}${emoji}`); setContentType("emoji"); }} className="rounded-full border border-border px-2 py-1 text-xs">{emoji}</button>)}</div></div><input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="内容标签（如：#感情 #职场）" className="w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm outline-none" /><select value={category} onChange={(e) => setCategory(e.target.value as PostType)} className="w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm outline-none"><option>最新</option><option>吐槽</option><option>提问</option></select><div className="flex items-center gap-2 text-xs text-muted-foreground"><Smile className="size-3.5" /> 当前类型：{contentType}</div></div></div>{previewImage && <div className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4" onClick={() => setPreviewImage(null)}><img src={previewImage} alt="preview" className="max-h-[85vh] max-w-full rounded-2xl object-contain shadow-2xl" /></div>}</div>);
 }
 
 function CommentsModal({ post, comments, commentDraft, setCommentDraft, commentReplyTo, onReply, onLike, onReport, commentLikeIds, commentReported, onClose, onComment }: { post: TreeholePost; comments: TreeholeComment[]; commentDraft: string; setCommentDraft: (v: string) => void; commentReplyTo: TreeholeComment | null; onReply: (c: TreeholeComment) => void; onLike: (id: string) => Promise<void>; onReport: (id: string) => Promise<void>; commentLikeIds: string[]; commentReported: string | null; onClose: () => void; onComment: () => Promise<void> }) {

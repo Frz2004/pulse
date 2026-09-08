@@ -100,7 +100,11 @@ function SbtiGamePage() {
           sbtiStandardTypes,
           sbtiSpecialTypes,
           drunkNow || isDrunk,
-          sbtiConfig.scoring.levelThresholds,
+          sbtiConfig.scoring.levelThresholds as {
+            L: [number, number];
+            M: [number, number];
+            H: [number, number];
+          },
         ),
       );
       setStage("result");

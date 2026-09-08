@@ -5,10 +5,16 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { track, Events } from "@/lib/analytics";
 
+type AuthSearch = {
+  mode: "login" | "signup";
+  /** 登录成功后的跳转地址；未指定时回落到 /discover */
+  redirect?: string;
+};
+
 export const Route = createFileRoute("/auth")({
-  validateSearch: (s: Record<string, unknown>) => ({
-    mode: (s.mode as string) === "signup" ? "signup" : "login",
-    redirect: (s.redirect as string) || "/discover",
+  validateSearch: (s: Record<string, unknown>): AuthSearch => ({
+    mode: s.mode === "signup" ? "signup" : "login",
+    redirect: typeof s.redirect === "string" && s.redirect ? s.redirect : undefined,
   }),
   component: AuthPage,
 });
@@ -29,7 +35,7 @@ function AuthPage() {
   const [otpSent, setOtpSent] = useState(false);
 
   const routeAfterLogin = async (userId: string | undefined) => {
-    let target = search.redirect;
+    let target: string = search.redirect || "/discover";
     if (userId) {
       const { data: roleData } = await supabase
         .from("user_roles")
