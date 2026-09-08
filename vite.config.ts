@@ -11,9 +11,6 @@ export default defineConfig(({ command }) => ({
     tailwindcss(),
     tanstackStart({
       server: { entry: "server" },
-      serverFns: {
-        disableCsrfMiddlewareWarning: true,
-      },
     }),
     react(),
     command === "build" && cloudflare(),
